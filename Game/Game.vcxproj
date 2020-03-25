@@ -36,6 +36,9 @@
     <ClInclude Include="src\Player.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Controller_AI_BenFickes\Controller_AI_BenFickes.vcxproj">
+      <Project>{ad6764cd-c862-4814-9412-9028f0bb6a10}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Controller_UI\Controller_UI.vcxproj">
       <Project>{7225cd9e-322b-46e1-b1cd-68f78b6f474f}</Project>
     </ProjectReference>
@@ -114,7 +117,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>./src;../Interface/src;../external/SDL2/include;../external/SDL2_image\include;../external/SDL2_ttf/include;../Controller_UI/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Controller_AI_BenFickes/src;./src;../Interface/src;../external/SDL2/include;../external/SDL2_image\include;../external/SDL2_ttf/include;../Controller_UI/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>26812</DisableSpecificWarnings>
       <PrecompiledHeaderFile />
