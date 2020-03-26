@@ -30,7 +30,7 @@
 static const Vec2 ksGiantPos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
 static const Vec2 ksArcherPos(LEFT_BRIDGE_CENTER_X, 0.f);
 
-Controller_AI_BenFickes::Controller_AI_BenFickes() {
+void Controller_AI_BenFickes::getMinElixir() {
     auto allMobTypes = m_pPlayer->GetAvailableMobTypes();
     minElixirCost = MAX_ELIXIR;
     for (iEntityStats::MobType mobType : allMobTypes) {
@@ -41,11 +41,30 @@ Controller_AI_BenFickes::Controller_AI_BenFickes() {
     }
 }
 
+// a heuristic to determine how threatening to our towers this particular enemy is
+float Controller_AI_BenFickes::threatLevel(iPlayer::EntityData mob) {
+    if (minElixirCost < 0) { //annoying, but player isn't instantiated until tick, so we have to do this here
+        getMinElixir();
+    }
+    if (mob.m_Position.y > ((float)GAME_GRID_HEIGHT / 2.f)) {
+        return 0; //we only care about enemies on our side. Since we are on defense, we can react quickly.
+    }
+    float dps = mob.m_Stats.getDamage() / mob.m_Stats.getAttackTime(); //dps
+    float threat = dps * mob.m_Stats.getMaxHealth(); // dps * survivability = threat
+    if (mob.m_Stats.getDamageType() == iEntityStats::DamageType::Ranged) {
+        //because ranged units are a greater threat when combined with other units, up the threat level
+        threat *= 2.f;
+    }
+    return threat;
+    // for reference, threat levels of 3 current units:
+    //S: 202070
+    //A: 61714
+    //G: 460683
+}
+
 void Controller_AI_BenFickes::tick(float deltaTSec)
 {
     assert(m_pPlayer);
-
-    // wait for elixir
     
     if (m_pPlayer->getElixir() < minElixirCost) {
         return; // nothing we can do, we have no elixir
@@ -53,17 +72,14 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
 
 
 
+    //we want to keep some elixir aside, but spawn an offensive so we're not wasteful
     if (m_pPlayer->getElixir() >= 9)
     {
         // convert the positions from player space to game space
         bool isNorth = m_pPlayer->isNorth();
         Vec2 giantPos_Game = ksGiantPos.Player2Game(isNorth);
-        Vec2 archerPos_Game = ksArcherPos.Player2Game(isNorth);
 
-        // Create two archers and a giant
         m_pPlayer->placeMob(iEntityStats::Giant, giantPos_Game);
-        m_pPlayer->placeMob(iEntityStats::Archer, archerPos_Game);
-        m_pPlayer->placeMob(iEntityStats::Archer, archerPos_Game);
     }
 }
 

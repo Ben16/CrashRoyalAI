@@ -23,6 +23,7 @@
 #pragma once
 
 #include "iController.h"
+#include "iPlayer.h"
 
 
 
@@ -35,6 +36,8 @@ public:
     void tick(float deltaTSec);
 
 private:
-    float minElixirCost;
+    void getMinElixir();
+    float threatLevel(iPlayer::EntityData mob);
+    float minElixirCost = -1.f;
 
 };
