@@ -28,7 +28,12 @@
 #include "Vec2.h"
 
 static const Vec2 ksGiantPos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
-static const Vec2 ksArcherPos(LEFT_BRIDGE_CENTER_X, 0.f);
+static const Vec2 placePos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 2.5f); // temporary - just to test
+
+//threat levels
+static const float NO_THREAT = 100000;
+static const float LOW_THREAT = 300000;
+static const float MED_THREAT = 500000;
 
 void Controller_AI_BenFickes::getMinElixir() {
     auto allMobTypes = m_pPlayer->GetAvailableMobTypes();
@@ -65,21 +70,66 @@ float Controller_AI_BenFickes::threatLevel(iPlayer::EntityData mob) {
 void Controller_AI_BenFickes::tick(float deltaTSec)
 {
     assert(m_pPlayer);
+
+    float elixir = m_pPlayer->getElixir();
     
-    if (m_pPlayer->getElixir() < minElixirCost) {
+    if (elixir < minElixirCost) {
         return; // nothing we can do, we have no elixir
     }
 
+    float totalThreatLevel = 0.f;
+    deltaEnemyScan += deltaTSec;
+    if (deltaEnemyScan >= deltaEnemyThreshold) { // we don't want to do this every frame, too expensive
+        deltaEnemyScan -= deltaEnemyThreshold;
+        int count = m_pPlayer->getNumOpponentMobs();
+        for (int i = 0; i < count; ++i) {
+            iPlayer::EntityData enemy = m_pPlayer->getOpponentMob(i);
+            totalThreatLevel += threatLevel(enemy);
+        }
 
+        count = m_pPlayer->getNumMobs();
+        for (int i = 0; i < count; ++i) {
+            iPlayer::EntityData defense = m_pPlayer->getMob(i);
+            totalThreatLevel -= threatLevel(defense); //like enemies, we should only count friendly mobs on defense side as lowering threat
+        }
+    }
 
-    //we want to keep some elixir aside, but spawn an offensive so we're not wasteful
-    if (m_pPlayer->getElixir() >= 9)
-    {
-        // convert the positions from player space to game space
-        bool isNorth = m_pPlayer->isNorth();
-        Vec2 giantPos_Game = ksGiantPos.Player2Game(isNorth);
+    if (elixir > 9.5f) {
+        //we're about to be wasteful - might as well spawn a giant
+        m_pPlayer->placeMob(iEntityStats::MobType::Giant, ksGiantPos);
+    }
 
-        m_pPlayer->placeMob(iEntityStats::Giant, giantPos_Game);
+    unsigned int spawnCount = 0;
+    unsigned int needToSpawn = -1;
+    if (totalThreatLevel < NO_THREAT) {
+        return; //nothing we need to do here, trust towers
+    }
+    else if (totalThreatLevel < LOW_THREAT) {
+        //spawn 1 unit
+        needToSpawn = 1;
+    }
+    else if (totalThreatLevel < MED_THREAT) {
+        //spawn 2 units
+        needToSpawn = 2;
+
+    }
+    else {
+        //spawn whatever you can
+        needToSpawn = 10;
+    }
+
+    while (elixir >= minElixirCost && spawnCount < needToSpawn) {
+        //we don't spawn giants in defense - they're not defensive units
+        if (elixir >= 3.f) {
+            //spawn swordsman
+            m_pPlayer->placeMob(iEntityStats::MobType::Swordsman, placePos);
+            ++spawnCount;
+        }
+        else if (elixir >= 2.f) {
+            //spawn archer
+            m_pPlayer->placeMob(iEntityStats::MobType::Archer, placePos);
+            ++spawnCount;
+        }
     }
 }
 
