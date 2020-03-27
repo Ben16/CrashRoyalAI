@@ -27,8 +27,10 @@
 #include "iPlayer.h"
 #include "Vec2.h"
 
-static const Vec2 ksGiantPos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
-static const Vec2 placePos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 2.5f); // temporary - just to test
+static const Vec2 ksGiantPosLeft(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
+static const Vec2 ksGiantPosRight(RIGHT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
+//static const Vec2 placePos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 2.5f); // temporary - just to test
+Vec2 placePos(0, 0); // temporary - just to test
 
 //threat levels
 static const float NO_THREAT = 100000;
@@ -80,12 +82,16 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
     float totalThreatLevel = 0.f;
     deltaEnemyScan += deltaTSec;
     if (deltaEnemyScan >= deltaEnemyThreshold) { // we don't want to do this every frame, too expensive
-        deltaEnemyScan -= deltaEnemyThreshold;
+        deltaEnemyScan = 0;
         int count = m_pPlayer->getNumOpponentMobs();
+        Vec2 totalPos(0, 0);
         for (int i = 0; i < count; ++i) {
             iPlayer::EntityData enemy = m_pPlayer->getOpponentMob(i);
             totalThreatLevel += threatLevel(enemy);
+            totalPos += enemy.m_Position;
         }
+        //get average position
+        placePos = totalPos / count;
 
         count = m_pPlayer->getNumMobs();
         for (int i = 0; i < count; ++i) {
@@ -96,7 +102,13 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
 
     if (elixir > 9.5f) {
         //we're about to be wasteful - might as well spawn a giant
-        m_pPlayer->placeMob(iEntityStats::MobType::Giant, ksGiantPos);
+        unsigned int randVal = rand() % 2;
+        if (randVal == 0) {
+            m_pPlayer->placeMob(iEntityStats::MobType::Giant, ksGiantPosLeft);
+        }
+        else {
+            m_pPlayer->placeMob(iEntityStats::MobType::Giant, ksGiantPosRight);
+        }
     }
 
     unsigned int spawnCount = 0;
