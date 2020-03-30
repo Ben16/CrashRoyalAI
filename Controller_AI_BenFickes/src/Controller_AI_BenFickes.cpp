@@ -71,9 +71,13 @@ float Controller_AI_BenFickes::threatLevel(iPlayer::EntityData mob) {
         getPrincessRange(); //annoying - but no static princess tower info
     }
 
-    if (mob.m_Position.y > NorthPrincessY + princessRange) { //start defending when close to the princess tower
+    if (m_pPlayer->isNorth() && mob.m_Position.y > NorthPrincessY + princessRange) { //start defending when close to the princess tower
         return 0; //we only care about enemies on our side. Since we are on defense, we can react quickly.
     }
+    if (!m_pPlayer->isNorth() && mob.m_Position.y < SouthPrincessY - princessRange) { //start defending when close to the princess tower
+        return 0; //we only care about enemies on our side. Since we are on defense, we can react quickly.
+    }
+
     float dps = mob.m_Stats.getDamage() / mob.m_Stats.getAttackTime(); //dps
     float threat = dps * mob.m_Stats.getMaxHealth(); // dps * survivability = threat
     if (mob.m_Stats.getDamageType() == iEntityStats::DamageType::Ranged) {
@@ -103,15 +107,23 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
     deltaEnemyScan += deltaTSec;
     if (deltaEnemyScan >= deltaEnemyThreshold) { // we don't want to do this every frame, too expensive
         deltaEnemyScan = 0;
-        int count = m_pPlayer->getNumOpponentMobs();
+        unsigned int count = m_pPlayer->getNumOpponentMobs();
+        unsigned int threatCount = 0;
         Vec2 totalPos(0, 0);
         for (int i = 0; i < count; ++i) {
             iPlayer::EntityData enemy = m_pPlayer->getOpponentMob(i);
-            totalThreatLevel += threatLevel(enemy);
-            totalPos += enemy.m_Position;
+            float individualThreat = threatLevel(enemy);
+            totalThreatLevel += individualThreat;
+            if (individualThreat > 0.1f) {
+                totalPos += enemy.m_Position;
+                ++threatCount;
+            }
         }
         //get average position
-        placePos = totalPos / count;
+        if (threatCount > 0) {
+            placePos = totalPos / threatCount;
+        }
+        
 
         //want range to be off to the side
         if ((placePos + Vec2(2, 0)).x < (GAME_GRID_WIDTH * PIXELS_PER_METER) / 2) {
@@ -135,10 +147,12 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
         //we're about to be wasteful - might as well spawn a giant
         unsigned int randVal = rand() % 2;
         if (randVal == 0) {
-            m_pPlayer->placeMob(iEntityStats::MobType::Giant, ksGiantPosLeft);
+            Vec2 giantPosLeftGame = ksGiantPosLeft.Player2Game(m_pPlayer->isNorth());
+            m_pPlayer->placeMob(iEntityStats::MobType::Giant, giantPosLeftGame);
         }
         else {
-            m_pPlayer->placeMob(iEntityStats::MobType::Giant, ksGiantPosRight);
+            Vec2 giantPosRightGame = ksGiantPosRight.Player2Game(m_pPlayer->isNorth());
+            m_pPlayer->placeMob(iEntityStats::MobType::Giant, giantPosRightGame);
         }
     }
 

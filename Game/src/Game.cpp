@@ -40,7 +40,7 @@ Game::Game()
     // itself, or if you make one the UI and one your AI then you can play
     // against your AI.  If you make the controller NULL then that player
     // will just passively sit there and let you kill it.
-    buildPlayers(new Controller_AI_BenFickes, new Controller_UI);
+    buildPlayers(new Controller_AI_BenFickes, new Controller_AI_BenFickes);
 
     buildWaypoints();
 }
