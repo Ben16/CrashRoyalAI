@@ -29,7 +29,6 @@
 
 static const Vec2 ksGiantPosLeft(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
 static const Vec2 ksGiantPosRight(RIGHT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
-//static const Vec2 placePos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 2.5f); // temporary - just to test
 
 
 //threat levels
@@ -63,14 +62,6 @@ void Controller_AI_BenFickes::getPrincessRange() {
 
 // a heuristic to determine how threatening to our towers this particular enemy is
 float Controller_AI_BenFickes::threatLevel(iPlayer::EntityData mob) {
-    if (minElixirCost < 0) { //annoying, but player isn't instantiated until tick, so we have to do this here
-        getMinElixir();
-    }
-
-    if (princessRange < 0) {
-        getPrincessRange(); //annoying - but no static princess tower info
-    }
-
     if (m_pPlayer->isNorth() && mob.m_Position.y > NorthPrincessY + princessRange) { //start defending when close to the princess tower
         return 0; //we only care about enemies on our side. Since we are on defense, we can react quickly.
     }
@@ -94,6 +85,14 @@ float Controller_AI_BenFickes::threatLevel(iPlayer::EntityData mob) {
 void Controller_AI_BenFickes::tick(float deltaTSec)
 {
     assert(m_pPlayer);
+
+    if (minElixirCost < 0) { //annoying, but player isn't instantiated until tick, so we have to do this here
+        getMinElixir();
+    }
+
+    if (princessRange < 0) {
+        getPrincessRange(); //annoying - but no static princess tower info
+    }
 
     float elixir = m_pPlayer->getElixir();
     Vec2 placePos(0, 0);
@@ -187,6 +186,7 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
     }
     else {
         //spawn whatever you can
+        std::cout << "Wow!" << std::endl;
         needToSpawn = 10;
     }
 
