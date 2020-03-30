@@ -126,10 +126,10 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
         
 
         //want range to be off to the side
-        if ((placePos + Vec2(2, 0)).x < (GAME_GRID_WIDTH * PIXELS_PER_METER) / 2) {
+        if ((placePos + Vec2(2, 0)).x < (GAME_GRID_WIDTH) / 2) {
             rangedPlacePos = placePos + Vec2(2, 0);
         }
-        else if ((placePos - Vec2(2, 0)).x > (GAME_GRID_WIDTH* PIXELS_PER_METER) / 2) {
+        else if ((placePos - Vec2(2, 0)).x > (GAME_GRID_WIDTH) / 2) {
             rangedPlacePos = placePos - Vec2(2, 0);
         }
         else {
