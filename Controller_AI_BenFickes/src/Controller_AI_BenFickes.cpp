@@ -98,13 +98,17 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
     float elixir = m_pPlayer->getElixir();
     Vec2 placePos(0, 0);
     Vec2 rangedPlacePos(0, 0);
-    
-    if (elixir < minElixirCost) {
-        return; // nothing we can do, we have no elixir
-    }
 
     float totalThreatLevel = 0.f;
     deltaEnemyScan += deltaTSec;
+    if (!uhOhReady) {
+        emoteDelta += deltaTSec;
+        if (emoteDelta > emoteCooldown) {
+            uhOhReady = true;
+            emoteDelta = 0.f;
+        }
+    }
+    
     if (deltaEnemyScan >= deltaEnemyThreshold) { // we don't want to do this every frame, too expensive
         deltaEnemyScan = 0;
         unsigned int count = m_pPlayer->getNumOpponentMobs();
@@ -118,6 +122,16 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
                 totalPos += enemy.m_Position;
                 ++threatCount;
             }
+        }
+
+        if (elixir < minElixirCost) {
+            if (totalThreatLevel > LOW_THREAT) {
+                if (uhOhReady) {
+                    std::cout << "Uh-oh!" << std::endl;
+                    uhOhReady = false;
+                }
+            }
+            return; //we've emoted, now we can early out
         }
         //get average position
         if (threatCount > 0) {
@@ -145,6 +159,7 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
 
     if (elixir > 9.5f) {
         //we're about to be wasteful - might as well spawn a giant
+        std::cout << "Take this!" << std::endl;
         unsigned int randVal = rand() % 2;
         if (randVal == 0) {
             Vec2 giantPosLeftGame = ksGiantPosLeft.Player2Game(m_pPlayer->isNorth());
@@ -168,7 +183,7 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
     else if (totalThreatLevel < MED_THREAT) {
         //spawn 2 units
         needToSpawn = 2;
-
+        std::cout << "Wow!" << std::endl;
     }
     else {
         //spawn whatever you can

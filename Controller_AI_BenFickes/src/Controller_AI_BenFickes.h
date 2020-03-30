@@ -43,4 +43,7 @@ private:
     float princessRange = -1.f;
     float deltaEnemyScan = 0.f;
     const float deltaEnemyThreshold = 0.3f;
+    bool uhOhReady = true;
+    float emoteCooldown = 1.0f;
+    float emoteDelta = 0.f;
 };
