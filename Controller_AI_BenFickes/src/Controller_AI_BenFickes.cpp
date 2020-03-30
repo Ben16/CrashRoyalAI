@@ -30,7 +30,7 @@
 static const Vec2 ksGiantPosLeft(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
 static const Vec2 ksGiantPosRight(RIGHT_BRIDGE_CENTER_X, RIVER_TOP_Y - 0.5f);
 //static const Vec2 placePos(LEFT_BRIDGE_CENTER_X, RIVER_TOP_Y - 2.5f); // temporary - just to test
-Vec2 placePos(0, 0); // temporary - just to test
+
 
 //threat levels
 static const float NO_THREAT = 100000;
@@ -48,12 +48,30 @@ void Controller_AI_BenFickes::getMinElixir() {
     }
 }
 
+void Controller_AI_BenFickes::getPrincessRange() {
+    int buildCount = m_pPlayer->getNumBuildings();
+    for (unsigned int i = 0; i < buildCount; ++i) {
+        iPlayer::EntityData data = m_pPlayer->getBuilding(i);
+        if (data.m_Stats.getBuildingType() == iEntityStats::BuildingType::Princess) {
+            princessRange = data.m_Stats.getAttackRange();
+            return;
+        }
+    }
+    //shouldnt happen but let's be safe
+    princessRange = 7.f;
+}
+
 // a heuristic to determine how threatening to our towers this particular enemy is
 float Controller_AI_BenFickes::threatLevel(iPlayer::EntityData mob) {
     if (minElixirCost < 0) { //annoying, but player isn't instantiated until tick, so we have to do this here
         getMinElixir();
     }
-    if (mob.m_Position.y > ((float)GAME_GRID_HEIGHT / 2.f)) {
+
+    if (princessRange < 0) {
+        getPrincessRange(); //annoying - but no static princess tower info
+    }
+
+    if (mob.m_Position.y > NorthPrincessY + princessRange) { //start defending when close to the princess tower
         return 0; //we only care about enemies on our side. Since we are on defense, we can react quickly.
     }
     float dps = mob.m_Stats.getDamage() / mob.m_Stats.getAttackTime(); //dps
@@ -74,6 +92,8 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
     assert(m_pPlayer);
 
     float elixir = m_pPlayer->getElixir();
+    Vec2 placePos(0, 0);
+    Vec2 rangedPlacePos(0, 0);
     
     if (elixir < minElixirCost) {
         return; // nothing we can do, we have no elixir
@@ -92,6 +112,17 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
         }
         //get average position
         placePos = totalPos / count;
+
+        //want range to be off to the side
+        if ((placePos + Vec2(2, 0)).x < (GAME_GRID_WIDTH * PIXELS_PER_METER) / 2) {
+            rangedPlacePos = placePos + Vec2(2, 0);
+        }
+        else if ((placePos - Vec2(2, 0)).x > (GAME_GRID_WIDTH* PIXELS_PER_METER) / 2) {
+            rangedPlacePos = placePos - Vec2(2, 0);
+        }
+        else {
+            rangedPlacePos = placePos;
+        }
 
         count = m_pPlayer->getNumMobs();
         for (int i = 0; i < count; ++i) {
@@ -139,7 +170,7 @@ void Controller_AI_BenFickes::tick(float deltaTSec)
         }
         else if (elixir >= 2.f) {
             //spawn archer
-            m_pPlayer->placeMob(iEntityStats::MobType::Archer, placePos);
+            m_pPlayer->placeMob(iEntityStats::MobType::Archer, rangedPlacePos);
             ++spawnCount;
         }
     }

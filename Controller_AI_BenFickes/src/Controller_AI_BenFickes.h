@@ -37,8 +37,10 @@ public:
 
 private:
     void getMinElixir();
+    void getPrincessRange();
     float threatLevel(iPlayer::EntityData mob);
     float minElixirCost = -1.f;
+    float princessRange = -1.f;
     float deltaEnemyScan = 0.f;
     const float deltaEnemyThreshold = 0.3f;
 };
