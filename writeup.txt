@@ -1,0 +1,48 @@
+Design Goals:
+
+This AI centers around a defensive strategy. It seeks to utilize the firepower of friendly princess towers in order to defeat enemy units, slowly accruing enough elixir to launch a counteroffensive.
+It detects when hostile enemies have entered the range of a friendly tower. Before they can destroy it, friendly units will fight back.
+This AI assesses the threat of hostile enemies when they enter the range of the tower based on their stats, and assesses the capability of friendly units already in range.
+It sends an appropriate level of help in response.
+
+The player experience this AI seeks to create is the triumph of breaking through an iron defense. For the most part, this AI will match player units that enter its side.
+It becomes weakest when it tries to counterattack, spawning a giant. This provides an opening for the player to launch an offensive the AI cannot match.
+The AI will throw units at the assault as they become available. While this may deter the players' units, in a well-formed team, it will ensure there is no unified resistance, and the player will triumph.
+However, if the player does not play strategically, their units will be countered one by one, and the giants will slowly but surely take down their towers.
+
+AI Structure:
+
+The structure of this code revolves around a threat heuristic and the evaluation of thresholds. 
+The assessment of threat does not happen every frame, but rather every .2 seconds. From this, two values are obtained: total (unanswered) threat and enemy location.
+If the locations of enemies fall in the region we want to protect (within range of princess towers), we launch our defense. 
+Depending on the threat level, we answer with an appropriate number and type of units. For example, a single archer needs no response (the tower will take care of it). However, a swordsman may call for a swordsman to fight back.
+The evaluation of threats is dynamic and will work for any unit types, even if new units are added. The thresholds are static variables that can be easily changed for modified strategy.
+
+Stretch Goals:
+
+Note: all lines correspond to the file Controller_AI_BenFickes.cpp unless specified otherwise. This file references Controller_AI_BenFickes.h, but I am omitting those line numbers, as the actual logic happens in the cpp file.
+
+1. Personas
+This AI has two distinct "modes" - its normal defensive mode, and an offensive (yet cautious) counteroffense it launches (including a "Take this!" emote).
+The defensive code is most of Controller_AI_BenFickes.cpp. The offensive code is contained in lines 160-172 of the same file.
+These could be considered two personas, or the offensive mode could be considered a subset of the overall strategy. I leave that for the grader to decide, but believe there is enough of a difference in the strategies to mention.
+
+2. Emotes
+This AI has three possible messages it can print to cout, triggered by different scenarios.
+a. "Take this!" - will be printed when launching giant counteroffensive (line 162)
+b. "Wow!" - a message of awe at player's strength. Will be printed when there is a great deal of unanswered threat but the AI still has elixir.
+In player terms, this means if the player launches a large wave, and "Uh-oh" is not printed, "Wow!" will be. (lines 186 & 190)
+c. "Uh-oh" - a message indicating the AI is in trouble. Will be printed when there is a threat the AI cannot answer (but deems enough to warrant one).
+To prevent the chat from being spammed with "Uh-oh"s, this can only trigger once per second.
+Printed at line 130. Anti-spam code is lines 103-109 and 129-132.
+
+3. Evaluate/Incorporate enemy types
+This AI evaluates both friend and foe units' effectiveness with a heuristic based solely on their stats (lines 64-83). The need to respond is based on these values.
+Not only this, but the AI also will save time and return if it knows it does not have enough elixir (after emoting if necessary). It makes no assumption about the minimum elixir required, but rather also evaluates that from available units. (lines 39-48)
+The AI also checks the range of princess towers to determine where it should defend - if these towers' stats are changed, the AI will adjust. (lines 50-61)
+The one thing that is NOT dynamic by unit type is the defensive response - it is always swordsmen and archers (lines 195-204). There is both gameplay and technical reason for this:
+Gameplay: these units are a "sure" response. A heuristic response might lead to ineffective units being chosen - it'd stink to have the AI spawn a giant in defense.
+Technical: information about units' stats are not statically available. There is no way to check values of uninstanced units (the reason why min elixir and princess tower range cannot be evaluated until tick 1).
+This means that it's impossible, with the current code structure, to evaluate possible unit responses and choose one by its stats, since you can't access that info. They must be hardcoded.
+So, this section could be updated to reflect later units, and will adequately spawn units to fight back, but, without updating any code, it will always spawn archers and swordsmen in defense.
+
